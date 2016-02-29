@@ -47,8 +47,9 @@ func (buffer *Ringbuffer)ReadBuffer() (p *[]byte, ok error) {
 	case buffer.writeIndex - buffer.readIndex > buffer.bufferSize:
 		ok = false
 	default:
-		p = &(buffer.ringBuffer[buffer.readIndex])
-		buffer.ringBuffer[buffer.readIndex] = nil
+		index := buffer.readIndex % buffer.bufferSize
+		p = &(buffer.ringBuffer[index])
+		buffer.ringBuffer[index] = nil
 		atomic.AddUint64(&buffer.readIndex, 1)
 		if p == nil {
 			p = false
@@ -63,10 +64,10 @@ func (buffer *Ringbuffer)ReadBuffer() (p *[]byte, ok error) {
 func (buffer *Ringbuffer)WriteBuffer(in *[]byte) (ok error) {
 	ok = true
 	switch  {
-	case buffer.writeIndex - buffer.readIndex >= buffer.bufferSize:
+	case buffer.writeIndex - buffer.readIndex < 0:
 		ok = false
 	default:
-		index := atomic.AddUint64(&buffer.writeIndex, 1)
+		index := atomic.AddUint64(&buffer.writeIndex, 1) % buffer.bufferSize
 		if buffer.ringBuffer[index] == nil {
 			buffer.ringBuffer[index] = in
 		}else {
