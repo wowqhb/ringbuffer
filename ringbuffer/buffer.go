@@ -5,19 +5,19 @@ import (
 )
 
 type Ringbuffer struct {
-	readIndex  uint64    //读序号
-	writeIndex uint64    //写序号
+	readIndex  int64     //读序号
+	writeIndex int64     //写序号
 	ringBuffer []*[]byte //环形buffer指针数组
-	bufferSize uint64    //初始化环形buffer指针数组大小
+	bufferSize int64     //初始化环形buffer指针数组大小
 }
 
 /**
 初始化ringbuffer
 参数bufferSize：初始化环形buffer指针数组大小
  */
-func (buffer *Ringbuffer)RingBufferInit(bufferSize uint64) {
-	buffer.readIndex = 0
-	buffer.writeIndex = 0
+func (buffer *Ringbuffer)RingBufferInit(bufferSize int64) {
+	buffer.readIndex = -1
+	buffer.writeIndex = -1
 	buffer.bufferSize = bufferSize
 	buffer.ringBuffer = make([]*[]byte, buffer.bufferSize)
 }
@@ -25,13 +25,13 @@ func (buffer *Ringbuffer)RingBufferInit(bufferSize uint64) {
 /**
 获取当前读序号
  */
-func (buffer *Ringbuffer)GetCurrentReadIndex() (uint64) {
+func (buffer *Ringbuffer)GetCurrentReadIndex() (int64) {
 	return buffer.readIndex
 }
 /**
 获取当前写序号
  */
-func (buffer *Ringbuffer)GetCurrentWriteIndex() (uint64) {
+func (buffer *Ringbuffer)GetCurrentWriteIndex() (int64) {
 	return buffer.writeIndex
 }
 
@@ -50,7 +50,7 @@ func (buffer *Ringbuffer)ReadBuffer() (p *[]byte, ok error) {
 		index := buffer.readIndex % buffer.bufferSize
 		p = &(buffer.ringBuffer[index])
 		buffer.ringBuffer[index] = nil
-		atomic.AddUint64(&buffer.readIndex, 1)
+		atomic.AddInt64(&buffer.readIndex, 1)
 		if p == nil {
 			p = false
 		}
@@ -67,7 +67,7 @@ func (buffer *Ringbuffer)WriteBuffer(in *[]byte) (ok error) {
 	case buffer.writeIndex - buffer.readIndex < 0:
 		ok = false
 	default:
-		index := atomic.AddUint64(&buffer.writeIndex, 1) % buffer.bufferSize
+		index := atomic.AddInt64(&buffer.writeIndex, 1) % buffer.bufferSize
 		if buffer.ringBuffer[index] == nil {
 			buffer.ringBuffer[index] = in
 		}else {
