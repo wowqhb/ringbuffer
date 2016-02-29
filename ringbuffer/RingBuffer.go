@@ -9,14 +9,14 @@ type RingBuffer struct {
 	writeIndex uint64    //写序号
 	ringBuffer []*[]byte //环形buffer指针数组
 	bufferSize uint64    //初始化环形buffer指针数组大小
-	k          int
+	k          uint64
 }
 
 /**
 初始化ringbuffer
 参数bufferSize：初始化环形buffer指针数组大小
  */
-func (buffer *RingBuffer)RingBufferInit(k int) {
+func (buffer *RingBuffer)RingBufferInit(k uint64) {
 	buffer.readIndex = 0
 	buffer.writeIndex = 0
 	buffer.bufferSize = uint64(1) << k
