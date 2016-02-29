@@ -17,7 +17,7 @@ type RingBuffer struct {
  */
 func (buffer *RingBuffer)RingBufferInit(bufferSize int64) {
 	buffer.readIndex = -1
-	buffer.writeIndex = -1
+	buffer.writeIndex = 0
 	buffer.bufferSize = bufferSize
 	buffer.ringBuffer = make([]*[]byte, buffer.bufferSize)
 }
@@ -42,7 +42,7 @@ func (buffer *RingBuffer)ReadBuffer() (p *[]byte, ok bool) {
 	ok = true
 	p = nil
 	switch  {
-	case buffer.readIndex > buffer.writeIndex:
+	case buffer.readIndex >= buffer.writeIndex:
 		ok = false
 	case buffer.writeIndex - buffer.readIndex > buffer.bufferSize:
 		ok = false
