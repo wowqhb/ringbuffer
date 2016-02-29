@@ -44,7 +44,7 @@ func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 			fmt.Print("read::nil =>> ")
 			fmt.Println(ok)
 		}
-		time.Sleep(10 * time.Millisecond)
+		//time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -56,6 +56,6 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 		ok := rbuffer.WriteBuffer(&bytes)
 		fmt.Print("write::" + time_ + " =>> ")
 		fmt.Println(ok)
-		time.Sleep(10 * time.Millisecond)
+		//time.Sleep(10 * time.Millisecond)
 	}
 }
