@@ -16,8 +16,8 @@ type RingBuffer struct {
 参数bufferSize：初始化环形buffer指针数组大小
  */
 func (buffer *RingBuffer)RingBufferInit(bufferSize int64) {
-	buffer.readIndex = -1
-	buffer.writeIndex = -1
+	buffer.readIndex = 0
+	buffer.writeIndex = 0
 	buffer.bufferSize = bufferSize
 	buffer.ringBuffer = make([]*[]byte, buffer.bufferSize)
 }
@@ -67,9 +67,10 @@ func (buffer *RingBuffer)WriteBuffer(in *[]byte) (ok bool) {
 	case buffer.writeIndex - buffer.readIndex < 0:
 		ok = false
 	default:
-		index := atomic.AddInt64(&buffer.writeIndex, 1) % buffer.bufferSize
+		index := buffer.writeIndex % buffer.bufferSize
 		if buffer.ringBuffer[index] == nil {
 			buffer.ringBuffer[index] = in
+			atomic.AddInt64(&buffer.writeIndex, 1)
 		}else {
 			ok = false
 		}
