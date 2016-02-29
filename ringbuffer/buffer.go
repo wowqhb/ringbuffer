@@ -38,7 +38,7 @@ func (buffer *Ringbuffer)GetCurrentWriteIndex() (uint64) {
 /**
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
  */
-func (buffer *Ringbuffer)ReadBuffer(index uint64) (p *[]byte, ok error) {
+func (buffer *Ringbuffer)ReadBuffer() (p *[]byte, ok error) {
 	ok = true
 	p = nil
 	switch  {
@@ -47,9 +47,12 @@ func (buffer *Ringbuffer)ReadBuffer(index uint64) (p *[]byte, ok error) {
 	case buffer.writeIndex - buffer.readIndex > buffer.bufferSize:
 		ok = false
 	default:
-		p = &(buffer.ringBuffer[index])
-		buffer.ringBuffer[index] = nil
-		buffer.readIndex = atomic.AddUint64(&buffer.readIndex, 1)
+		p = &(buffer.ringBuffer[buffer.readIndex])
+		buffer.ringBuffer[buffer.readIndex] = nil
+		atomic.AddUint64(&buffer.readIndex, 1)
+		if p == nil {
+			p = false
+		}
 	}
 	return p, ok
 }
@@ -66,7 +69,6 @@ func (buffer *Ringbuffer)WriteBuffer(in *[]byte) (ok error) {
 		index := atomic.AddUint64(&buffer.writeIndex, 1)
 		if buffer.ringBuffer[index] == nil {
 			buffer.ringBuffer[index] = in
-			buffer.writeIndex = index
 		}else {
 			ok = false
 		}
