@@ -19,7 +19,7 @@ type RingBuffer struct {
 func (buffer *RingBuffer)RingBufferInit(k int64) {
 	buffer.readIndex = 0
 	buffer.writeIndex = 0
-	buffer.bufferSize = 2 ^ k
+	buffer.bufferSize = 2 << k
 	buffer.k = k
 	buffer.ringBuffer = make([]*[]byte, buffer.bufferSize)
 }
