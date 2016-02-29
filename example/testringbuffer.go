@@ -27,7 +27,8 @@ func main() {
 	fmt.Println(retP)*/
 	go writegoroutine(&rbuffer)
 	go readgoroutine(&rbuffer)
-
+	go writegoroutine(&rbuffer)
+	go readgoroutine(&rbuffer)
 	time.Sleep(60 * time.Second)
 
 }
