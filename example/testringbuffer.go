@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 	"bytes"
+//"strconv"
 	"strconv"
 )
 
 func main() {
 	rbuffer := ringbuffer.RingBuffer{}
-	rbuffer.RingBufferInit(3)
+	rbuffer.RingBufferInit(uint64(8))
 	fmt.Println(rbuffer.GetCurrentReadIndex())
 	fmt.Println(rbuffer.GetCurrentWriteIndex())
 	/*bytes := make([]byte, 20)
@@ -33,29 +34,30 @@ func main() {
 
 func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 	for {
-		fmt.Println(strconv.FormatInt(rbuffer.GetCurrentWriteIndex(),10) + "::::" +strconv.FormatInt(rbuffer.GetCurrentReadIndex(),10))
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
-			fmt.Print("read::")
-			fmt.Print(retP)
-			fmt.Print(" =>> ")
-			fmt.Println(ok)
+			if retP == nil {
+				//fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex() - 1, 10) + "::READ::nil =>> " + strconv.FormatBool(ok))
+			}else {
+				fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex() - 1, 10) + "::READ::" + string(*retP) + " =>> " + strconv.FormatBool(ok))
+			}
+
 		}else {
-			fmt.Print("read::nil =>> ")
-			fmt.Println(ok)
+			//fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex(), 10) + "::READ::nil =>> " + strconv.FormatBool(ok))
 		}
-		//time.Sleep(10 * time.Millisecond)
 	}
 }
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
-		fmt.Println(strconv.FormatInt(rbuffer.GetCurrentWriteIndex(),10) + "::::" +strconv.FormatInt(rbuffer.GetCurrentReadIndex(),10))
-		time_ := time.Now().String()
+		time_ := strconv.FormatUint(rbuffer.GetCurrentWriteIndex(), 10);
 		bytes := bytes.NewBufferString(time_).Bytes()
 		ok := rbuffer.WriteBuffer(&bytes)
-		fmt.Print("write::" + time_ + " =>> ")
-		fmt.Println(ok)
-		//time.Sleep(10 * time.Millisecond)
+		windex := rbuffer.GetCurrentWriteIndex()
+		if ok {
+			windex = rbuffer.GetCurrentWriteIndex() - 1
+			fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
+		}
+		//fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
 	}
 }
