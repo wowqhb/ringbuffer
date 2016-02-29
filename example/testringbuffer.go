@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 	"bytes"
+	"strconv"
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 
 func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 	for {
+		fmt.Println(strconv.FormatInt(rbuffer.GetCurrentWriteIndex(),10) + "::::" +strconv.FormatInt(rbuffer.GetCurrentReadIndex(),10))
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			fmt.Print("read::")
@@ -42,17 +44,18 @@ func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 			fmt.Print("read::nil =>> ")
 			fmt.Println(ok)
 		}
-		time.Sleep(10*time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
+		fmt.Println(strconv.FormatInt(rbuffer.GetCurrentWriteIndex(),10) + "::::" +strconv.FormatInt(rbuffer.GetCurrentReadIndex(),10))
 		time_ := time.Now().String()
 		bytes := bytes.NewBufferString(time_).Bytes()
 		ok := rbuffer.WriteBuffer(&bytes)
 		fmt.Print("write::" + time_ + " =>> ")
 		fmt.Println(ok)
-		time.Sleep(10*time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
