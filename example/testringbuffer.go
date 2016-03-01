@@ -7,6 +7,7 @@ import (
 	"bytes"
 //"strconv"
 	"strconv"
+	"runtime"
 )
 
 func main() {
@@ -43,8 +44,9 @@ func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 
 		}else {
 			//fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex(), 10) + "::READ::nil =>> " + strconv.FormatBool(ok))
-			time.Sleep(1 * time.Millisecond)
+			//time.Sleep(1 * time.Millisecond)
 			//time.Sleep(1*time.Microsecond)
+			runtime.Gosched()
 		}
 	}
 }
@@ -59,8 +61,9 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 			windex = rbuffer.GetCurrentWriteIndex() - 1
 			fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
 		}else {
-			time.Sleep(1 * time.Millisecond)
+			//.Sleep(1 * time.Millisecond)
 			//time.Sleep(1*time.Microsecond)
+			runtime.Gosched()
 		}
 		//fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
 	}
