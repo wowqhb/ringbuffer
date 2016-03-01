@@ -28,13 +28,13 @@ func (buffer *RingBuffer)RingBufferInit(k uint64) {
 获取当前读序号
  */
 func (buffer *RingBuffer)GetCurrentReadIndex() (uint64) {
-	return buffer.readIndex
+	return atomic.LoadInt64(&buffer.readIndex)
 }
 /**
 获取当前写序号
  */
 func (buffer *RingBuffer)GetCurrentWriteIndex() (uint64) {
-	return buffer.writeIndex
+	return atomic.LoadInt64(&buffer.writeIndex)
 }
 
 /**
@@ -43,14 +43,17 @@ func (buffer *RingBuffer)GetCurrentWriteIndex() (uint64) {
 func (buffer *RingBuffer)ReadBuffer() (p *[]byte, ok bool) {
 	ok = true
 	p = nil
+
+	readIndex := atomic.LoadInt64(&buffer.readIndex)
+	writeIndex := atomic.LoadInt64(&buffer.writeIndex)
 	switch  {
-	case buffer.readIndex >= buffer.writeIndex:
+	case readIndex >= writeIndex:
 		ok = false
-	case buffer.writeIndex - buffer.readIndex > buffer.bufferSize:
+	case writeIndex - readIndex > buffer.bufferSize:
 		ok = false
 	default:
 		//index := buffer.readIndex % buffer.bufferSize
-		index := buffer.readIndex & ((1 << buffer.k) - 1)
+		index := readIndex & ((1 << buffer.k) - 1)
 		p = buffer.ringBuffer[index]
 		buffer.ringBuffer[index] = nil
 		atomic.AddUint64(&buffer.readIndex, 1)
@@ -66,12 +69,15 @@ func (buffer *RingBuffer)ReadBuffer() (p *[]byte, ok bool) {
  */
 func (buffer *RingBuffer)WriteBuffer(in *[]byte) (ok bool) {
 	ok = true
+
+	readIndex := atomic.LoadInt64(&buffer.readIndex)
+	writeIndex := atomic.LoadInt64(&buffer.writeIndex)
 	switch  {
-	case buffer.writeIndex - buffer.readIndex < 0:
+	case writeIndex - readIndex < 0:
 		ok = false
 	default:
 		//index := buffer.writeIndex % buffer.bufferSize
-		index := buffer.writeIndex & ((1 << buffer.k) - 1)
+		index := writeIndex & ((1 << buffer.k) - 1)
 		if buffer.ringBuffer[index] == nil {
 			buffer.ringBuffer[index] = in
 			atomic.AddUint64(&buffer.writeIndex, 1)
