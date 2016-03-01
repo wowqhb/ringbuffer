@@ -27,8 +27,6 @@ func main() {
 	fmt.Println(retP)*/
 	go writegoroutine(&rbuffer)
 	go readgoroutine(&rbuffer)
-	go writegoroutine(&rbuffer)
-	go readgoroutine(&rbuffer)
 	time.Sleep(60 * time.Second)
 
 }
@@ -45,7 +43,8 @@ func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 
 		}else {
 			//fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex(), 10) + "::READ::nil =>> " + strconv.FormatBool(ok))
-			time.Sleep(2 * time.Millisecond)
+			time.Sleep(1 * time.Millisecond)
+			//time.Sleep(1*time.Microsecond)
 		}
 	}
 }
@@ -60,7 +59,8 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 			windex = rbuffer.GetCurrentWriteIndex() - 1
 			fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
 		}else {
-			time.Sleep(2 * time.Millisecond)
+			time.Sleep(1 * time.Millisecond)
+			//time.Sleep(1*time.Microsecond)
 		}
 		//fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
 	}
