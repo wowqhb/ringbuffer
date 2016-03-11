@@ -97,7 +97,7 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for writeIndex-readIndex >= this.bufSize {
+	for writeIndex-readIndex > this.bufSize {
 		readIndex = this.GetCurrentReadIndex()
 		this.pcond.Wait()
 		continue

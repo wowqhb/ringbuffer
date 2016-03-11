@@ -25,9 +25,9 @@ func main() {
 	bytes[0] = byte(19)
 	fmt.Println(bytes)
 	fmt.Println(retP)*/
-	go writegoroutine(&rbuffer)
-	go readgoroutine(&rbuffer)
-	time.Sleep(60 * time.Second)
+	go writegoroutine(rbuffer)
+	go readgoroutine(rbuffer)
+	time.Sleep(600 * time.Second)
 
 }
 
@@ -36,7 +36,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			if retP != nil {
-				fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex()-1, 10) + "::READ::" + string(*retP) + " =>> " + strconv.FormatBool(ok))
+				fmt.Println(rbuffer.GetCurrentReadIndex()-1, "::READ::", *retP, " =>> ", ok)
 			}
 
 		}
@@ -45,14 +45,13 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
-		time_ := strconv.FormatUint(rbuffer.GetCurrentWriteIndex(), 10)
+		time_ := strconv.FormatInt(rbuffer.GetCurrentWriteIndex()+int64(10000), 10)
 		bytes := bytes.NewBufferString(time_).Bytes()
 		ok := rbuffer.WriteBuffer(&bytes)
 		windex := rbuffer.GetCurrentWriteIndex()
 		if ok {
 			windex = rbuffer.GetCurrentWriteIndex() - 1
-			fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
+			fmt.Println(windex, "::WRITE::", bytes, " =>> ", ok)
 		}
-		//fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
 	}
 }
