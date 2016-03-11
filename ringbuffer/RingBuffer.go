@@ -79,9 +79,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	p = this.buf[index]
 	this.buf[index] = nil
 	atomic.AddInt64(&this.readIndex, int64(1))
-	if p != nil {
-		ok = true
-	}
+	ok = true
 	return p, ok
 }
 
@@ -103,10 +101,8 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		continue
 	}
 	index := writeIndex & this.mask //替代求模
-	if this.buf[index] == nil {
-		this.buf[index] = in
-		atomic.AddInt64(&this.writeIndex, int64(1))
-		ok = true
-	}
+	this.buf[index] = in
+	atomic.AddInt64(&this.writeIndex, int64(1))
+	ok = true
 	return ok
 }
