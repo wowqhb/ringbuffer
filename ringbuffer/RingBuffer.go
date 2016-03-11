@@ -103,7 +103,7 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		continue
 	}
 	index := writeIndex & this.mask //替代求模
-	this.buf[index+1] = in
+	this.buf[index] = in
 	atomic.AddInt64(&this.writeIndex, int64(1))
 	ok = true
 	return ok
