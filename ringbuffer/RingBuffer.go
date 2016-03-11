@@ -37,7 +37,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		pcond:      sync.NewCond(new(sync.Mutex)),
 		ccond:      sync.NewCond(new(sync.Mutex)),
 	}
-	for i := 0; i < size; i++ {
+	for i := int64(0); i < size; i++ {
 		buffer.buf[i] = nil
 	}
 	return &buffer, nil
