@@ -50,7 +50,6 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 		ok := rbuffer.WriteBuffer(&bytes)
 		windex := rbuffer.GetCurrentWriteIndex()
 		if ok {
-			windex = rbuffer.GetCurrentWriteIndex() - 1
 			fmt.Println(windex, "::WRITE::", bytes, " =>> ", ok)
 		}
 	}
