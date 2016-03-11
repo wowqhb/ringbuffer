@@ -79,7 +79,9 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	p = this.buf[index]
 	this.buf[index] = nil
 	atomic.AddInt64(&this.readIndex, int64(1))
-	ok = true
+	if p != nil {
+		ok = true
+	}
 	return p, ok
 }
 
