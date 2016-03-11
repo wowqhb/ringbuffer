@@ -46,14 +46,14 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 /**
 获取当前读序号
 */
-func (this *RingBuffer) GetCurrentReadIndex() uint64 {
+func (this *RingBuffer) GetCurrentReadIndex() int64 {
 	return atomic.LoadInt64(&this.readIndex)
 }
 
 /**
 获取当前写序号
 */
-func (this *RingBuffer) GetCurrentWriteIndex() uint64 {
+func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 	return atomic.LoadInt64(&this.writeIndex)
 }
 
