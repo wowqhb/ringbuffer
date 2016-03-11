@@ -1,89 +1,112 @@
 package ringbuffer
 
 import (
+	"fmt"
+	"sync"
 	"sync/atomic"
 )
 
 type RingBuffer struct {
-	readIndex  uint64    //读序号
-	writeIndex uint64    //写序号
-	ringBuffer []*[]byte //环形buffer指针数组
-	bufferSize uint64    //初始化环形buffer指针数组大小
-	k          uint64
+	readIndex  int64      //读序号
+	writeIndex int64      //写序号
+	buf        []*[]byte  //环形buffer指针数组
+	bufSize    int64      //初始化环形buffer指针数组大小
+	mask       int64      //初始化环形buffer指针数组大小
+	pcond      *sync.Cond //生产者
+	ccond      *sync.Cond //消费者
+}
+
+func powerOfTwo64(n int64) bool {
+	return n != 0 && (n&(n-1)) == 0
 }
 
 /**
 初始化ringbuffer
 参数bufferSize：初始化环形buffer指针数组大小
- */
-func (buffer *RingBuffer)RingBufferInit(k uint64) {
-	buffer.readIndex = 0
-	buffer.writeIndex = 0
-	buffer.bufferSize = uint64(1) << k
-	buffer.k = k
-	buffer.ringBuffer = make([]*[]byte, buffer.bufferSize)
+*/
+func NewRingBuffer(size int64) (*RingBuffer, error) {
+	if !powerOfTwo64(size) {
+		return nil, fmt.Errorf("This size is not able to used")
+	}
+	buffer := RingBuffer{
+		readIndex:  int64(0),
+		writeIndex: int64(0),
+		buf:        make([]*[]byte, size),
+		bufSize:    size,
+		mask:       size - int64(1),
+		pcond:      sync.NewCond(new(sync.Mutex)),
+		ccond:      sync.NewCond(new(sync.Mutex)),
+	}
+	for i := 0; i < size; i++ {
+		buffer.buf[i] = nil
+	}
+	return &buffer, nil
 }
 
 /**
 获取当前读序号
- */
-func (buffer *RingBuffer)GetCurrentReadIndex() (uint64) {
-	return atomic.LoadInt64(&buffer.readIndex)
+*/
+func (this *RingBuffer) GetCurrentReadIndex() uint64 {
+	return atomic.LoadInt64(&this.readIndex)
 }
+
 /**
 获取当前写序号
- */
-func (buffer *RingBuffer)GetCurrentWriteIndex() (uint64) {
-	return atomic.LoadInt64(&buffer.writeIndex)
+*/
+func (this *RingBuffer) GetCurrentWriteIndex() uint64 {
+	return atomic.LoadInt64(&this.writeIndex)
 }
 
 /**
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
- */
-func (buffer *RingBuffer)ReadBuffer() (p *[]byte, ok bool) {
-	ok = true
+*/
+func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
+	this.ccond.L.Lock()
+	defer func() {
+		this.pcond.Broadcast()
+		this.ccond.L.Unlock()
+	}()
+	ok = false
 	p = nil
-
-	readIndex := atomic.LoadInt64(&buffer.readIndex)
-	writeIndex := atomic.LoadInt64(&buffer.writeIndex)
-	switch  {
-	case readIndex >= writeIndex:
-		ok = false
-	case writeIndex - readIndex > buffer.bufferSize:
-		ok = false
-	default:
-		//index := buffer.readIndex % buffer.bufferSize
-		index := readIndex & ((1 << buffer.k) - 1)
-		p = buffer.ringBuffer[index]
-		buffer.ringBuffer[index] = nil
-		atomic.AddUint64(&buffer.readIndex, 1)
-		if p == nil {
-			ok = false
-		}
+	readIndex := this.GetCurrentReadIndex()
+	writeIndex := this.GetCurrentWriteIndex()
+	for readIndex >= writeIndex {
+		writeIndex = this.GetCurrentWriteIndex()
+		this.ccond.Wait()
+		continue
+	}
+	index := readIndex & this.mask //替代求模
+	p = this.buf[index]
+	this.buf[index] = nil
+	atomic.AddInt64(&this.readIndex, int64(1))
+	if p != nil {
+		ok = true
 	}
 	return p, ok
 }
 
 /**
 写入ringbuffer指针，以及将写序号加1
- */
-func (buffer *RingBuffer)WriteBuffer(in *[]byte) (ok bool) {
-	ok = true
-
-	readIndex := atomic.LoadInt64(&buffer.readIndex)
-	writeIndex := atomic.LoadInt64(&buffer.writeIndex)
-	switch  {
-	case writeIndex - readIndex < 0:
-		ok = false
-	default:
-		//index := buffer.writeIndex % buffer.bufferSize
-		index := writeIndex & ((1 << buffer.k) - 1)
-		if buffer.ringBuffer[index] == nil {
-			buffer.ringBuffer[index] = in
-			atomic.AddUint64(&buffer.writeIndex, 1)
-		}else {
-			ok = false
-		}
+*/
+func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
+	this.pcond.L.Lock()
+	defer func() {
+		this.ccond.Broadcast()
+		this.pcond.L.Unlock()
+	}()
+	ok = false
+	readIndex := this.GetCurrentReadIndex()
+	writeIndex := this.GetCurrentWriteIndex()
+	for writeIndex-readIndex >= this.bufSize {
+		readIndex = this.GetCurrentReadIndex()
+		this.pcond.Wait()
+		continue
+	}
+	index := writeIndex & this.mask //替代求模
+	if this.buf[index] == nil {
+		this.buf[index] = in
+		atomic.AddInt64(&this.writeIndex, int64(1))
+		ok = true
 	}
 	return ok
 }

@@ -1,18 +1,17 @@
 package main
 
 import (
-	"github.com/wowqhb/ringbuffer/ringbuffer"
-	"fmt"
-	"time"
 	"bytes"
-//"strconv"
-	"strconv"
+	"fmt"
+	"github.com/wowqhb/ringbuffer/ringbuffer"
+	"time"
+	//"strconv"
 	"runtime"
+	"strconv"
 )
 
 func main() {
-	rbuffer := ringbuffer.RingBuffer{}
-	rbuffer.RingBufferInit(uint64(8))
+	rbuffer := ringbuffer.NewRingBuffer(int64(32))
 	fmt.Println(rbuffer.GetCurrentReadIndex())
 	fmt.Println(rbuffer.GetCurrentWriteIndex())
 	/*bytes := make([]byte, 20)
@@ -32,17 +31,17 @@ func main() {
 
 }
 
-func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
+func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			if retP == nil {
 				//fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex() - 1, 10) + "::READ::nil =>> " + strconv.FormatBool(ok))
-			}else {
-				fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex() - 1, 10) + "::READ::" + string(*retP) + " =>> " + strconv.FormatBool(ok))
+			} else {
+				fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex()-1, 10) + "::READ::" + string(*retP) + " =>> " + strconv.FormatBool(ok))
 			}
 
-		}else {
+		} else {
 			//fmt.Println(strconv.FormatUint(rbuffer.GetCurrentReadIndex(), 10) + "::READ::nil =>> " + strconv.FormatBool(ok))
 			//time.Sleep(1 * time.Millisecond)
 			//time.Sleep(1*time.Microsecond)
@@ -53,14 +52,14 @@ func readgoroutine(rbuffer  *ringbuffer.RingBuffer) {
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
-		time_ := strconv.FormatUint(rbuffer.GetCurrentWriteIndex(), 10);
+		time_ := strconv.FormatUint(rbuffer.GetCurrentWriteIndex(), 10)
 		bytes := bytes.NewBufferString(time_).Bytes()
 		ok := rbuffer.WriteBuffer(&bytes)
 		windex := rbuffer.GetCurrentWriteIndex()
 		if ok {
 			windex = rbuffer.GetCurrentWriteIndex() - 1
 			fmt.Println(strconv.FormatUint(windex, 10) + "::WRITE::" + time_ + " =>> " + strconv.FormatBool(ok))
-		}else {
+		} else {
 			//.Sleep(1 * time.Millisecond)
 			//time.Sleep(1*time.Microsecond)
 			runtime.Gosched()
