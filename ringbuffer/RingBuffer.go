@@ -70,7 +70,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	p = nil
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for readIndex >= writeIndex {
+	for readIndex > writeIndex {
 		writeIndex = this.GetCurrentWriteIndex()
 		this.ccond.Wait()
 		continue
@@ -97,12 +97,13 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for writeIndex-readIndex > this.bufSize {
+	next := writeIndex + int64(1)
+	for next-readIndex >= this.bufSize {
 		readIndex = this.GetCurrentReadIndex()
 		this.pcond.Wait()
 		continue
 	}
-	index := writeIndex & this.mask //替代求模
+	index := next & this.mask //替代求模
 	this.buf[index] = in
 	atomic.AddInt64(&this.writeIndex, int64(1))
 	ok = true
