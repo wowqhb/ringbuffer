@@ -63,17 +63,15 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
 	defer func() {
-		this.pcond.Broadcast()
 		this.ccond.L.Unlock()
 	}()
 	ok = false
 	p = nil
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for readIndex >= writeIndex {
-		writeIndex = this.GetCurrentWriteIndex()
+	for ; readIndex >= writeIndex; writeIndex = this.GetCurrentWriteIndex() {
+		this.pcond.Broadcast()
 		this.ccond.Wait()
-		continue
 	}
 	index := readIndex & this.mask //替代求模
 	p = this.buf[index]
@@ -91,16 +89,14 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
 	defer func() {
-		this.ccond.Broadcast()
 		this.pcond.L.Unlock()
 	}()
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for writeIndex-readIndex >= this.bufSize {
-		readIndex = this.GetCurrentReadIndex()
+	for ; writeIndex-readIndex >= this.bufSize; readIndex = this.GetCurrentReadIndex() {
+		this.ccond.Broadcast()
 		this.pcond.Wait()
-		continue
 	}
 	index := writeIndex & this.mask //替代求模
 	this.buf[index] = in
