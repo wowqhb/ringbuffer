@@ -129,10 +129,6 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	return ok
 }
 
-func (this *RingBuffer) ID() int64 {
-	return this.id
-}
-
 func (this *RingBuffer) Close() error {
 	atomic.StoreInt64(&this.done, 1)
 
