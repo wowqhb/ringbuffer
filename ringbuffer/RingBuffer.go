@@ -80,7 +80,6 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		writeIndex = this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
 			//fmt.Println("read wait")
-			time.Sleep(1 * time.Millisecond)
 			this.pcond.Broadcast()
 			this.ccond.Wait()
 		} else {
