@@ -14,6 +14,7 @@ type RingBuffer struct {
 	mask       int64      //初始化环形buffer指针数组大小
 	pcond      *sync.Cond //生产者
 	ccond      *sync.Cond //消费者
+	done       int64      //is done? 1=done; 0=doing
 }
 
 func powerOfTwo64(n int64) bool {
@@ -36,6 +37,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		mask:       size - int64(1),
 		pcond:      sync.NewCond(new(sync.Mutex)),
 		ccond:      sync.NewCond(new(sync.Mutex)),
+		done:       int64(0),
 	}
 	for i := int64(0); i < size; i++ {
 		buffer.buf[i] = nil
@@ -63,15 +65,25 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
 	defer func() {
+		this.pcond.Broadcast()
 		this.ccond.L.Unlock()
 	}()
 	ok = false
 	p = nil
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for ; readIndex >= writeIndex; writeIndex = this.GetCurrentWriteIndex() {
-		this.pcond.Broadcast()
-		this.ccond.Wait()
+	for {
+		if this.isDone() {
+			return nil, false
+		}
+		writeIndex = this.GetCurrentWriteIndex()
+		if readIndex >= writeIndex {
+			//fmt.Println("read wait")
+			this.pcond.Broadcast()
+			this.ccond.Wait()
+		} else {
+			break
+		}
 	}
 	index := readIndex & this.mask //替代求模
 	p = this.buf[index]
@@ -89,18 +101,56 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
 	defer func() {
+		this.ccond.Broadcast()
 		this.pcond.L.Unlock()
 	}()
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
-	for ; writeIndex-readIndex >= this.bufSize; readIndex = this.GetCurrentReadIndex() {
-		this.ccond.Broadcast()
-		this.pcond.Wait()
+	for {
+		if this.isDone() {
+			return false
+		}
+		readIndex = this.GetCurrentReadIndex()
+		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
+			//fmt.Println("write wait")
+			this.ccond.Broadcast()
+			this.pcond.Wait()
+			//time.Sleep(1 * time.Millisecond)
+		} else {
+			break
+		}
+
 	}
 	index := writeIndex & this.mask //替代求模
 	this.buf[index] = in
 	atomic.AddInt64(&this.writeIndex, int64(1))
 	ok = true
 	return ok
+}
+
+func (this *RingBuffer) ID() int64 {
+	return this.id
+}
+
+func (this *RingBuffer) Close() error {
+	atomic.StoreInt64(&this.done, 1)
+
+	this.pcond.L.Lock()
+	this.ccond.Broadcast()
+	this.pcond.L.Unlock()
+
+	this.ccond.L.Lock()
+	this.pcond.Broadcast()
+	this.ccond.L.Unlock()
+
+	return nil
+}
+
+func (this *RingBuffer) isDone() bool {
+	if atomic.LoadInt64(&this.done) == 1 {
+		return true
+	}
+
+	return false
 }
