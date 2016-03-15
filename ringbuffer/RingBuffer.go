@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type RingBuffer struct {
@@ -67,6 +68,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	defer func() {
 		this.pcond.Broadcast()
 		this.ccond.L.Unlock()
+		time.Sleep(1 * time.Microsecond)
 	}()
 	ok = false
 	p = nil
@@ -103,6 +105,7 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	defer func() {
 		this.ccond.Broadcast()
 		this.pcond.L.Unlock()
+		time.Sleep(1 * time.Microsecond)
 	}()
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
