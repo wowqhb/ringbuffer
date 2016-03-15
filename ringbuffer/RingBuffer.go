@@ -65,7 +65,7 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
 	defer func() {
-		//this.pcond.Broadcast()
+		this.pcond.Broadcast()
 		this.ccond.L.Unlock()
 	}()
 	ok = false
@@ -101,7 +101,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
 	defer func() {
-		//this.ccond.Broadcast()
+		this.ccond.Broadcast()
 		this.pcond.L.Unlock()
 	}()
 	ok = false
