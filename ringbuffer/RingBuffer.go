@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type RingBuffer struct {
@@ -115,7 +114,6 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		readIndex = this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
 			//fmt.Println("write wait")
-			time.Sleep(1 * time.Millisecond)
 			this.ccond.Broadcast()
 			this.pcond.Wait()
 			//time.Sleep(1 * time.Millisecond)
