@@ -2,6 +2,7 @@ package ringbuffer
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -66,10 +67,10 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
 	defer func() {
-		this.pcond.Signal()
+		//this.pcond.Signal()
 		//this.pcond.Broadcast()
 		this.ccond.L.Unlock()
-		time.Sleep(3 * time.Millisecond)
+		//time.Sleep(3 * time.Millisecond)
 	}()
 	ok = false
 	p = nil
@@ -81,9 +82,11 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		}
 		writeIndex = this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
-			this.pcond.Signal()
+			//this.pcond.Signal()
 			//this.pcond.Broadcast()
-			this.ccond.Wait()
+			//this.ccond.Wait()
+			runtime.Gosched()
+			time.Sleep(3 * time.Millisecond)
 		} else {
 			break
 		}
@@ -106,10 +109,10 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
 	defer func() {
-		this.ccond.Signal()
+		//this.ccond.Signal()
 		//this.ccond.Broadcast()
 		this.pcond.L.Unlock()
-		time.Sleep(3 * time.Millisecond)
+		//time.Sleep(3 * time.Millisecond)
 	}()
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
@@ -120,9 +123,11 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		}
 		readIndex = this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
-			this.ccond.Signal()
+			//this.ccond.Signal()
 			//this.ccond.Broadcast()
-			this.pcond.Wait()
+			//this.pcond.Wait()
+			runtime.Gosched()
+			time.Sleep(3 * time.Millisecond)
 		} else {
 			break
 		}
