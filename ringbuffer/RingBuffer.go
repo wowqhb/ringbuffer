@@ -68,7 +68,6 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	defer func() {
 		this.pcond.Broadcast()
 		this.ccond.L.Unlock()
-		time.Sleep(5 * time.Microsecond)
 	}()
 	ok = false
 	p = nil
@@ -86,6 +85,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		} else {
 			break
 		}
+		time.Sleep(1 * time.Millisecond)
 	}
 	index := readIndex & this.mask //替代求模
 	p = this.buf[index]
@@ -105,7 +105,6 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	defer func() {
 		this.ccond.Broadcast()
 		this.pcond.L.Unlock()
-		time.Sleep(5 * time.Microsecond)
 	}()
 	ok = false
 	readIndex := this.GetCurrentReadIndex()
@@ -123,6 +122,7 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		} else {
 			break
 		}
+		time.Sleep(1 * time.Millisecond)
 
 	}
 	index := writeIndex & this.mask //替代求模
