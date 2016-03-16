@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type RingBuffer struct {
@@ -16,6 +15,8 @@ type RingBuffer struct {
 	pcond      *sync.Cond //生产者
 	ccond      *sync.Cond //消费者
 	done       int64      //is done? 1=done; 0=doing
+	pWaitTimes int64      //生产者wait次数
+	cWaitTimes int64      //消费者wait次数
 }
 
 func powerOfTwo64(n int64) bool {
@@ -66,7 +67,10 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
 	defer func() {
-		this.pcond.Broadcast()
+		if this.pWaitTimes > int64(0) {
+			this.pWaitTimes = int64(0)
+			this.pcond.Broadcast()
+		}
 		this.ccond.L.Unlock()
 	}()
 	ok = false
@@ -80,13 +84,17 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		writeIndex = this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
 			//fmt.Println("read wait")
-			this.pcond.Broadcast()
+			if this.pWaitTimes > int64(0) {
+				this.pWaitTimes = int64(0)
+				this.pcond.Broadcast()
+			}
+			this.cWaitTimes++
 			this.ccond.Wait()
 		} else {
 			break
 		}
 		//time.Sleep(1 * time.Millisecond)
-		time.Sleep(500 * time.Microsecond)
+		//time.Sleep(500 * time.Microsecond)
 	}
 	index := readIndex & this.mask //替代求模
 	p = this.buf[index]
@@ -104,7 +112,10 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
 	defer func() {
-		this.ccond.Broadcast()
+		if this.cWaitTimes > int64(0) {
+			this.cWaitTimes = int64(0)
+			this.ccond.Broadcast()
+		}
 		this.pcond.L.Unlock()
 	}()
 	ok = false
@@ -117,14 +128,18 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		readIndex = this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
 			//fmt.Println("write wait")
-			this.ccond.Broadcast()
+			if this.cWaitTimes > int64(0) {
+				this.cWaitTimes = int64(0)
+				this.ccond.Broadcast()
+			}
+			this.pWaitTimes++
 			this.pcond.Wait()
 			//time.Sleep(1 * time.Millisecond)
 		} else {
 			break
 		}
 		//time.Sleep(1 * time.Millisecond)
-		time.Sleep(500 * time.Microsecond)
+		//time.Sleep(500 * time.Microsecond)
 	}
 	index := writeIndex & this.mask //替代求模
 	this.buf[index] = in
