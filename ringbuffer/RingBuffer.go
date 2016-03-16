@@ -15,8 +15,6 @@ type RingBuffer struct {
 	pcond      *sync.Cond //生产者
 	ccond      *sync.Cond //消费者
 	done       int64      //is done? 1=done; 0=doing
-	pWaitTimes int64      //生产者wait次数
-	cWaitTimes int64      //消费者wait次数
 }
 
 func powerOfTwo64(n int64) bool {
@@ -40,37 +38,11 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		pcond:      sync.NewCond(new(sync.Mutex)),
 		ccond:      sync.NewCond(new(sync.Mutex)),
 		done:       int64(0),
-		pWaitTimes: int64(0),
-		cWaitTimes: int64(0),
 	}
 	for i := int64(0); i < size; i++ {
 		buffer.buf[i] = nil
 	}
 	return &buffer, nil
-}
-
-func (this *RingBuffer) GetpWaitTimes() int64 {
-	return atomic.LoadInt64(&this.pWaitTimes)
-}
-
-func (this *RingBuffer) GetcWaitTimes() int64 {
-	return atomic.LoadInt64(&this.cWaitTimes)
-}
-
-func (this *RingBuffer) ReSetpWaitTimes() {
-	atomic.StoreInt64(&this.pWaitTimes, int64(0))
-}
-
-func (this *RingBuffer) ReSetcWaitTimes() {
-	atomic.StoreInt64(&this.cWaitTimes, int64(0))
-}
-
-func (this *RingBuffer) AddpWaitTimes() int64 {
-	return atomic.AddInt64(&this.pWaitTimes, int64(1))
-}
-
-func (this *RingBuffer) AddcWaitTimes() int64 {
-	return atomic.AddInt64(&this.cWaitTimes, int64(1))
 }
 
 /**
@@ -92,9 +64,9 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 */
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
+	noBroadcast := true
 	defer func() {
-		if this.GetpWaitTimes() > int64(0) {
-			this.ReSetpWaitTimes()
+		if noBroadcast {
 			this.pcond.Broadcast()
 		}
 		this.ccond.L.Unlock()
@@ -109,11 +81,8 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		}
 		writeIndex = this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
-			if this.GetpWaitTimes() > int64(0) {
-				this.ReSetpWaitTimes()
-				this.pcond.Broadcast()
-			}
-			this.AddcWaitTimes()
+			this.pcond.Broadcast()
+			noBroadcast = false
 			this.ccond.Wait()
 		} else {
 			break
@@ -136,9 +105,9 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 */
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
+	noBroadcast := true
 	defer func() {
-		if this.GetcWaitTimes() > int64(0) {
-			this.ReSetcWaitTimes()
+		if noBroadcast {
 			this.ccond.Broadcast()
 		}
 		this.pcond.L.Unlock()
@@ -152,13 +121,9 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		}
 		readIndex = this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
-			if this.GetcWaitTimes() > int64(0) {
-				this.ReSetcWaitTimes()
-				this.ccond.Broadcast()
-			}
-			this.AddpWaitTimes()
+			this.ccond.Broadcast()
+			noBroadcast = false
 			this.pcond.Wait()
-			//time.Sleep(1 * time.Millisecond)
 		} else {
 			break
 		}
