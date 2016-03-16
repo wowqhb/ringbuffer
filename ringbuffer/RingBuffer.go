@@ -86,7 +86,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 			//this.pcond.Broadcast()
 			//this.ccond.Wait()
 			runtime.Gosched()
-			time.Sleep(3 * time.Millisecond)
+			time.Sleep(5 * time.Millisecond)
 		} else {
 			break
 		}
@@ -127,7 +127,7 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 			//this.ccond.Broadcast()
 			//this.pcond.Wait()
 			runtime.Gosched()
-			time.Sleep(3 * time.Millisecond)
+			time.Sleep(5 * time.Millisecond)
 		} else {
 			break
 		}
