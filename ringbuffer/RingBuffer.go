@@ -2,7 +2,6 @@ package ringbuffer
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
