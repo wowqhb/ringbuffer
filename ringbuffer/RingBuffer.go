@@ -49,11 +49,11 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 	return &buffer, nil
 }
 
-func (this *RingBuffer) GetpWaitTimes() {
+func (this *RingBuffer) GetpWaitTimes() int64 {
 	return atomic.LoadInt64(&this.pWaitTimes)
 }
 
-func (this *RingBuffer) GetcWaitTimes() {
+func (this *RingBuffer) GetcWaitTimes() int64 {
 	return atomic.LoadInt64(&this.cWaitTimes)
 }
 
