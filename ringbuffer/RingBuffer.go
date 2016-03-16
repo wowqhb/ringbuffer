@@ -58,11 +58,11 @@ func (this *RingBuffer) GetcWaitTimes() int64 {
 }
 
 func (this *RingBuffer) ReSetpWaitTimes() {
-	return atomic.StoreInt64(&this.pWaitTimes, int64(0))
+	atomic.StoreInt64(&this.pWaitTimes, int64(0))
 }
 
 func (this *RingBuffer) ReSetcWaitTimes() {
-	return atomic.StoreInt64(&this.cWaitTimes, int64(0))
+	atomic.StoreInt64(&this.cWaitTimes, int64(0))
 }
 
 func (this *RingBuffer) AddpWaitTimes() int64 {
