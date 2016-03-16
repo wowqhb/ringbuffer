@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type RingBuffer struct {
@@ -86,7 +87,7 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 			break
 		}
 		//time.Sleep(1 * time.Millisecond)
-		//time.Sleep(500 * time.Microsecond)
+		time.Sleep(500 * time.Microsecond)
 	}
 	index := readIndex & this.mask //替代求模
 	p = this.buf[index]
@@ -124,7 +125,7 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 			break
 		}
 		//time.Sleep(1 * time.Millisecond)
-		//time.Sleep(500 * time.Microsecond)
+		time.Sleep(500 * time.Microsecond)
 	}
 	index := writeIndex & this.mask //替代求模
 	this.buf[index] = in
@@ -137,11 +138,13 @@ func (this *RingBuffer) Close() error {
 	atomic.StoreInt64(&this.done, 1)
 
 	this.pcond.L.Lock()
-	this.ccond.Broadcast()
+	this.ccond.Signal()
+	//this.ccond.Broadcast()
 	this.pcond.L.Unlock()
 
 	this.ccond.L.Lock()
-	this.pcond.Broadcast()
+	this.pcond.Signal()
+	//this.pcond.Broadcast()
 	this.ccond.L.Unlock()
 
 	return nil
