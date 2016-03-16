@@ -64,11 +64,9 @@ func (this *RingBuffer) GetCurrentWriteIndex() int64 {
 */
 func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	this.ccond.L.Lock()
-	noBroadcast := true
 	defer func() {
-		if noBroadcast {
-			this.pcond.Broadcast()
-		}
+		this.pcond.Signal()
+		//this.pcond.Broadcast()
 		this.ccond.L.Unlock()
 	}()
 	ok = false
@@ -81,8 +79,8 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		}
 		writeIndex = this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
-			this.pcond.Broadcast()
-			noBroadcast = false
+			this.pcond.Signal()
+			//this.pcond.Broadcast()
 			this.ccond.Wait()
 		} else {
 			break
@@ -105,11 +103,9 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 */
 func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	this.pcond.L.Lock()
-	noBroadcast := true
 	defer func() {
-		if noBroadcast {
-			this.ccond.Broadcast()
-		}
+		this.ccond.Signal()
+		//this.ccond.Broadcast()
 		this.pcond.L.Unlock()
 	}()
 	ok = false
@@ -121,8 +117,8 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		}
 		readIndex = this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
-			this.ccond.Broadcast()
-			noBroadcast = false
+			this.ccond.Signal()
+			//this.ccond.Broadcast()
 			this.pcond.Wait()
 		} else {
 			break
