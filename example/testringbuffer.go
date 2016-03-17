@@ -40,7 +40,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 			}
 
 		}
-		time.Sleep(2 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
 
@@ -53,6 +53,6 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 		if ok {
 			fmt.Println(windex, "::WRITE::", bytes, " =>> ", ok)
 		}
-		time.Sleep(2 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
