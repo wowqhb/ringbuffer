@@ -81,11 +81,13 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 		}
 		writeIndex = this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
-			//this.pcond.Signal()
+			this.ccond.L.Lock()
+			this.pcond.Signal()
 			//this.pcond.Broadcast()
-			//this.ccond.Wait()
+			this.ccond.Wait()
+			this.ccond.L.Unlock()
 			//runtime.Gosched()
-			time.Sleep(5 * time.Millisecond)
+			//time.Sleep(5 * time.Millisecond)
 		} else {
 			break
 		}
@@ -124,9 +126,11 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 		}
 		readIndex = this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
-			//this.ccond.Signal()
+			this.pcond.L.Lock()
+			this.ccond.Signal()
 			//this.ccond.Broadcast()
-			//this.pcond.Wait()
+			this.pcond.Wait()
+			this.pcond.L.Unlock()
 			//runtime.Gosched()
 			time.Sleep(5 * time.Millisecond)
 		} else {
