@@ -32,10 +32,10 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 /**
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
 */
-func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
+func (this *RingBuffer) ReadBuffer() ([]byte, bool) {
 	select {
-	case p, ok = <-this.buf:
-		return &p, ok
+	case p, ok := <-this.buf:
+		return p, ok
 	}
 	return nil, false
 }
@@ -43,9 +43,9 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 /**
 写入ringbuffer指针，以及将写序号加1
 */
-func (this *RingBuffer) WriteBuffer(in *[]byte) bool {
+func (this *RingBuffer) WriteBuffer(in []byte) bool {
 	select {
-	case this.buf <- *in:
+	case this.buf <- in:
 		return true
 	}
 	return false

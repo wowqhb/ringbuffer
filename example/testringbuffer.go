@@ -32,7 +32,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			if retP != nil {
-				fmt.Println("::READ::", *retP, " =>> ", ok)
+				fmt.Println("::READ::", retP, " =>> ", ok)
 			}
 
 		}
@@ -44,7 +44,7 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
 		time_ := time.Now().String()
 		bytes := bytes.NewBufferString(time_).Bytes()
-		ok := rbuffer.WriteBuffer(&bytes)
+		ok := rbuffer.WriteBuffer(bytes)
 		if ok {
 			fmt.Println("::WRITE::", bytes, " =>> ", ok)
 		}
