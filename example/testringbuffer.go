@@ -5,15 +5,11 @@ import (
 	"fmt"
 	"github.com/wowqhb/ringbuffer/ringbuffer"
 	"time"
-	//"strconv"
-	"strconv"
 )
 
 func main() {
 	rbuffer, err := ringbuffer.NewRingBuffer(int64(32))
 	fmt.Println(" ringbuffer.NewRingBuffer(int64(32)):", err)
-	fmt.Println(rbuffer.GetCurrentReadIndex())
-	fmt.Println(rbuffer.GetCurrentWriteIndex())
 	/*bytes := make([]byte, 20)
 	bytes[1] = byte(20)
 	fmt.Println(&bytes)
@@ -36,7 +32,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			if retP != nil {
-				fmt.Println(rbuffer.GetCurrentReadIndex()-1, "::READ::", *retP, " =>> ", ok)
+				fmt.Println("::READ::", *retP, " =>> ", ok)
 			}
 
 		}
@@ -46,12 +42,11 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	for {
-		time_ := strconv.FormatInt(rbuffer.GetCurrentWriteIndex()+int64(10000), 10)
+		time_ := time.Now().String()
 		bytes := bytes.NewBufferString(time_).Bytes()
 		ok := rbuffer.WriteBuffer(&bytes)
-		windex := rbuffer.GetCurrentWriteIndex()
 		if ok {
-			fmt.Println(windex, "::WRITE::", bytes, " =>> ", ok)
+			fmt.Println("::WRITE::", bytes, " =>> ", ok)
 		}
 		time.Sleep(1 * time.Millisecond)
 	}
