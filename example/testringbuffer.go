@@ -41,12 +41,14 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 }
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
+	i := int64(0)
 	for {
 		time_ := time.Now().String()
 		bytes := bytes.NewBufferString(time_).Bytes()
 		ok := rbuffer.WriteBuffer(bytes)
 		if ok {
-			fmt.Println("::WRITE::", bytes, " =>> ", ok)
+			i++
+			fmt.Println(i, "::WRITE::", bytes, " =>> ", ok)
 		}
 		time.Sleep(1 * time.Millisecond)
 	}
