@@ -26,9 +26,6 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		buf:  make(chan []byte, size),
 		done: int64(0),
 	}
-	for i := int64(0); i < size; i++ {
-		buffer.buf[i] = nil
-	}
 	return &buffer, nil
 }
 
