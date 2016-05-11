@@ -28,15 +28,16 @@ func main() {
 }
 
 func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
+	i := int64(0)
 	for {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			if retP != nil {
-				fmt.Println("::READ::", retP, " =>> ", ok)
+				i++
+				fmt.Println(i, "::READ::", retP, " =>> ", ok)
 			}
 
 		}
-		time.Sleep(1 * time.Millisecond)
 	}
 }
 
@@ -50,6 +51,5 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 			i++
 			fmt.Println(i, "::WRITE::", bytes, " =>> ", ok)
 		}
-		time.Sleep(1 * time.Millisecond)
 	}
 }
