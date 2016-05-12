@@ -23,7 +23,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		return nil, fmt.Errorf("This size is not able to used")
 	}
 	buffer := RingBuffer{
-		buf:  make(chan []byte, size),
+		buf:  make(chan ArrayStruct, size),
 		done: int64(0),
 	}
 	return &buffer, nil
