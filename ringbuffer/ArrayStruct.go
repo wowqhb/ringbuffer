@@ -1,4 +1,4 @@
-package array
+package ringbuffer
 
 type ArrayStruct struct {
 	p       []byte

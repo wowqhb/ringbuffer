@@ -2,12 +2,13 @@ package ringbuffer
 
 import (
 	"fmt"
+	"github.com/wowqhb/ringbuffer/array"
 	"sync/atomic"
 )
 
 type RingBuffer struct {
-	buf  chan []byte //环形buffer指针数组
-	done int64       //is done? 1=done; 0=doing
+	buf  chan ArrayStruct //环形buffer指针数组
+	done int64            //is done? 1=done; 0=doing
 }
 
 func powerOfTwo64(n int64) bool {
