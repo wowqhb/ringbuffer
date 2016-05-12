@@ -1,6 +1,6 @@
 package array
 
-var ArrayStruct struct {
+type ArrayStruct struct {
 	p       []byte
 	realLen int64
 	maxLen  int64
