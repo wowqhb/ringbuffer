@@ -2,7 +2,6 @@ package ringbuffer
 
 import (
 	"fmt"
-	"github.com/wowqhb/ringbuffer/array"
 	"sync/atomic"
 )
 
