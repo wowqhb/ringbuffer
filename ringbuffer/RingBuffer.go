@@ -98,7 +98,7 @@ func (this *RingBuffer) isDone() bool {
 }
 
 func (this *RingBuffer) CreateBufferStruct() *BufferStruct {
-	bs := this.pool.Get().(BufferStruct)
+	bs := this.pool.Get().(*BufferStruct)
 	bs.pool = this.pool
-	return &bs
+	return bs
 }
