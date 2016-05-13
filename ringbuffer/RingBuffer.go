@@ -49,12 +49,11 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		buf:  make(chan *BufferStruct, size),
 		done: int64(0),
 		pool: &sync.Pool{
-			New: func(_pool *sync.Pool) interface{} {
+			New: func() interface{} {
 				return &BufferStruct{
 					realLen: 0,
 					maxLen:  8192,
 					p:       make([]byte, 8192),
-					pool:    _pool,
 				}
 			},
 		},
