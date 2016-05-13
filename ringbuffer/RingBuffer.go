@@ -77,7 +77,7 @@ func (this *RingBuffer) ReadBuffer() (*BufferStruct, bool) {
 */
 func (this *RingBuffer) WriteBuffer(in *BufferStruct) bool {
 	select {
-	case this.buf <- in:
+	case this.buf <- *in:
 		return true
 	}
 	return false
