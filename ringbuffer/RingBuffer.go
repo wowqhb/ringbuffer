@@ -46,7 +46,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		return nil, fmt.Errorf("This size is not able to used")
 	}
 	buffer := RingBuffer{
-		buf:  make(chan *BufferStruct, size),
+		buf:  make(chan BufferStruct, size),
 		done: int64(0),
 		pool: &sync.Pool{
 			New: func() interface{} {
@@ -64,10 +64,10 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 /**
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
 */
-func (this *RingBuffer) ReadBuffer() (BufferStruct, bool) {
+func (this *RingBuffer) ReadBuffer() (*BufferStruct, bool) {
 	select {
 	case p, ok := <-this.buf:
-		return p, ok
+		return &p, ok
 	}
 	return nil, false
 }
@@ -75,7 +75,7 @@ func (this *RingBuffer) ReadBuffer() (BufferStruct, bool) {
 /**
 写入ringbuffer指针，以及将写序号加1
 */
-func (this *RingBuffer) WriteBuffer(in BufferStruct) bool {
+func (this *RingBuffer) WriteBuffer(in *BufferStruct) bool {
 	select {
 	case this.buf <- in:
 		return true
@@ -97,8 +97,8 @@ func (this *RingBuffer) isDone() bool {
 	return false
 }
 
-func (this *RingBuffer) CreateBufferStruct() BufferStruct {
+func (this *RingBuffer) CreateBufferStruct() *BufferStruct {
 	bs := this.pool.Get().(BufferStruct)
 	bs.pool = this.pool
-	return bs
+	return &bs
 }
