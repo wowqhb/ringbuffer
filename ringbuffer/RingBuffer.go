@@ -24,11 +24,16 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 	if !powerOfTwo64(size) {
 		return nil, fmt.Errorf("This size is not able to used")
 	}
+	_pool, err := NewArrayPool(size * 2)
+	if err != nil {
+		return nil, fmt.Errorf("Create ArrayPool falure")
+	}
 	buffer := RingBuffer{
 		buf:  make(chan *ArrayStruct, size),
 		done: int64(0),
+		pool: _pool,
 	}
-	NewArrayPool(size * 2)
+
 	return &buffer, nil
 }
 
