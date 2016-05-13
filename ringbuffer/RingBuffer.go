@@ -80,7 +80,7 @@ func (this *RingBuffer) isDone() bool {
 }
 
 func (this *RingBuffer) Cleaner() {
-	for !this.isDone() {
+	for !this.isDone() && this.pool != nil {
 		this.pool.Cleaner()
 		fmt.Println("Cleaner running")
 		time.Sleep(10 * time.Minute)
