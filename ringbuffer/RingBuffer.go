@@ -28,6 +28,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		buf:  make(chan *ArrayStruct, size),
 		done: int64(0),
 	}
+	NewArrayPool(size * 2)
 	return &buffer, nil
 }
 

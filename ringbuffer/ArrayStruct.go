@@ -89,6 +89,7 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 			if err != nil {
 				return nil, errors.New("ERROR:getArrayStruct falure")
 			}
+			this.addCurrentTotal()
 			return as, nil
 		}
 		this.pool.Remove(f)
