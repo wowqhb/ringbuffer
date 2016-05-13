@@ -83,23 +83,18 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 	this.lock.L.Lock()
 	defer this.lock.L.Unlock()
 	if this.max >= this.GetCurrentTotal() {
-		//存在
-		if this.pool.Len() > 0 {
-			f := this.pool.Front()
-			this.pool.Remove(f)
-			v := f.Value.(*ArrayStruct)
-			v.flashTime()
-			return v, nil
-		}
-		//不存在，则创建
-		if this.GetCurrentTotal() == 0 {
+		f := this.pool.Front()
+		if f == nil {
 			as, err := newArrayStruct(this)
-			if err == nil {
-				if this.addCurrentTotal() {
-					return as, nil
-				}
+			if err != nil {
+				return nil, errors.New("ERROR:getArrayStruct falure")
 			}
+			return as, nil
 		}
+		this.pool.Remove(f)
+		v := f.Value.(*ArrayStruct)
+		v.flashTime()
+		return v, nil
 	}
 
 	return nil, errors.New("ERROR:getArrayStruct falure")
