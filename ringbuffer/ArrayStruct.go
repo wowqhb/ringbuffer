@@ -2,6 +2,7 @@ package ringbuffer
 
 import (
 	"container/list"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -42,7 +43,7 @@ type ArrayPool struct {
 
 func NewArrayPool(size int64) (*ArrayPool, error) {
 	if int64(0) == size {
-		return nil, error("ERROR:NewArrayPool falure")
+		return nil, errors.New("ERROR:NewArrayPool falure")
 	}
 	ap := &ArrayPool{
 		pool:         list.New(),
@@ -92,7 +93,7 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 		}
 	}
 
-	return nil, error("ERROR:getArrayStruct falure")
+	return nil, errors.New("ERROR:getArrayStruct falure")
 }
 
 func (this *ArrayPool) Cleaner() {
