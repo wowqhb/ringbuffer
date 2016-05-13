@@ -38,7 +38,7 @@ type ArrayPool struct {
 	max          int64
 	pool         *list.List
 	currentTotal int64
-	lock         sync.Cond
+	lock         *sync.Cond
 }
 
 func NewArrayPool(size int64) (*ArrayPool, error) {
