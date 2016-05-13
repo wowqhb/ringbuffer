@@ -26,7 +26,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 			if retP != nil {
 				i++
 				fmt.Println(i, "::READ::", retP, " =>> ", ok)
-				rbuffer.Destory(retP)
+				rbuffer.DestoryBytes(retP)
 			}
 
 		}
@@ -39,7 +39,7 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 		time_ := strconv.Itoa(i)
 		buffer := bytes.NewBufferString(time_)
 		_bytes := buffer.Bytes()
-		bs := rbuffer.CreateBufferStruct()
+		bs := rbuffer.GetBytes()
 		if len(_bytes) > len(bs) {
 			bs = _bytes
 		} else {

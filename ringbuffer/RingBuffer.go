@@ -72,11 +72,11 @@ func (this *RingBuffer) isDone() bool {
 	return false
 }
 
-func (this *RingBuffer) CreateBufferStruct() []byte {
+func (this *RingBuffer) GetBytes() []byte {
 	bs := this.pool.Get().([]byte)
 	return bs
 }
 
-func (this *RingBuffer) Destory(in []byte) {
+func (this *RingBuffer) DestoryBytes(in []byte) {
 	this.pool.Put(in)
 }
