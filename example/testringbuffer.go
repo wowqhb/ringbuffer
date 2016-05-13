@@ -11,17 +11,6 @@ import (
 func main() {
 	rbuffer, err := ringbuffer.NewRingBuffer(int64(32))
 	fmt.Println(" ringbuffer.NewRingBuffer(int64(32)):", err)
-	/*bytes := make([]byte, 20)
-	bytes[1] = byte(20)
-	fmt.Println(&bytes)
-	ok := rbuffer.WriteBuffer(&bytes)
-	fmt.Println(ok)
-	retP, ok := rbuffer.ReadBuffer()
-	fmt.Println(ok)
-	fmt.Println(retP)
-	bytes[0] = byte(19)
-	fmt.Println(bytes)
-	fmt.Println(retP)*/
 	go writegoroutine(rbuffer)
 	go readgoroutine(rbuffer)
 
@@ -42,7 +31,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 				} else {
 					ok = i == _i
 				}
-				fmt.Println(i, "::READ::", bytes.NewBuffer(retP.GetBytes()).String(), " =>> ", ok)
+				fmt.Println(i, "::READ::", retP.GetBytes(), " =>> ", ok)
 				retP.Destroy()
 			}
 
