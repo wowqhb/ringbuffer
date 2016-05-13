@@ -7,18 +7,18 @@ import (
 )
 
 type BufferStruct struct {
-	RealLen int
-	P       []byte
+	realLen int
+	p       []byte
 	pool    sync.Pool
 }
 
 func (this *BufferStruct) GetBytes() []byte {
-	return this.P[0:this.RealLen]
+	return this.p[0:this.realLen]
 }
 
 func (this *BufferStruct) Check(len int) {
-	if len > len(this.P) {
-		this.P = make([]byte, len)
+	if len > len(this.p) {
+		this.p = make([]byte, len)
 	}
 }
 func (this *BufferStruct) Destroy() {
@@ -49,8 +49,8 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		pool: &sync.Pool{
 			New: func() interface{} {
 				return &BufferStruct{
-					RealLen: 0,
-					P:       make([]byte, 8192),
+					realLen: 0,
+					p:       make([]byte, 8192),
 					pool:    nil,
 				}
 			},

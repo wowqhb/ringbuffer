@@ -36,14 +36,14 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 		if ok {
 			if retP != nil {
 				i++
-				_i, err := strconv.Atoi(bytes.NewBuffer(retP).String())
+				_i, err := strconv.Atoi(bytes.NewBuffer(retP.GetBytes()).String())
 				if err != nil {
 					ok = false
 				} else {
 					ok = i == _i
 				}
 				fmt.Println(i, "::READ::", bytes.NewBuffer(retP.GetBytes()).String(), " =>> ", ok)
-				retP.ReBackToPool()
+				retP.Destroy()
 			}
 
 		}
