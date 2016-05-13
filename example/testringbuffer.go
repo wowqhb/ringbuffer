@@ -56,7 +56,10 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 		time_ := strconv.Itoa(i)
 		buffer := bytes.NewBufferString(time_)
 		_bytes := buffer.Bytes()
-		ok := rbuffer.WriteBuffer(_bytes)
+		bs := rbuffer.CreateBufferStruct()
+		bs.Check(len(_bytes))
+		copy(bs.GetBytes()[0:], _bytes[0:])
+		ok := rbuffer.WriteBuffer(bs)
 		if ok {
 			fmt.Println(i, "::WRITE::", bytes.NewBuffer(_bytes).String(), " =>> ", ok)
 			i++

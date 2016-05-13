@@ -16,9 +16,9 @@ func (this *BufferStruct) GetBytes() []byte {
 	return this.p[0:this.realLen]
 }
 
-func (this *BufferStruct) Check(len int) {
-	if len > len(this.p) {
-		this.p = make([]byte, len)
+func (this *BufferStruct) Check(_len int) {
+	if _len > len(this.p) {
+		this.p = make([]byte, _len)
 	}
 }
 func (this *BufferStruct) Destroy() {
