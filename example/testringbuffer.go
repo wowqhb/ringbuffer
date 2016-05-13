@@ -31,13 +31,19 @@ func main() {
 }
 
 func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
-	i := int64(0)
+	i := 0
 	for {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
 			if retP != nil {
 				i++
-				fmt.Println(i, "::READ::", retP, " =>> ", ok)
+				_i, err := strconv.Atoi(bytes.NewBuffer(retP.GetBytes()).String())
+				if err != nil {
+					ok = false
+				} else {
+					ok = i == _i
+				}
+				fmt.Println(i, "::READ::", bytes.NewBuffer(retP.GetBytes()).String(), " =>> ", ok)
 				retP.ReBackToPool()
 			}
 
@@ -46,15 +52,15 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 }
 
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
-	i := int64(0)
+	i := int(1)
 	for {
 		time_ := strconv.Itoa(i)
 		buffer := bytes.NewBufferString(time_)
 		_bytes := buffer.Bytes()
 		ok := rbuffer.WriteBuffer(_bytes)
 		if ok {
-			i++
 			fmt.Println(i, "::WRITE::", bytes.NewBuffer(_bytes).String(), " =>> ", ok)
+			i++
 		}
 	}
 }
