@@ -29,7 +29,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		done: int64(0),
 		pool: &sync.Pool{
 			New: func() interface{} {
-				return make([]byte, 8192)
+				return make([]byte, 1)
 			},
 		},
 	}

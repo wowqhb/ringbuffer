@@ -25,14 +25,8 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 		if ok {
 			if retP != nil {
 				i++
-				_i, err := strconv.Atoi(bytes.NewBuffer(retP.GetBytes()).String())
-				if err != nil {
-					ok = false
-				} else {
-					ok = i == _i
-				}
-				fmt.Println(i, "::READ::", retP.GetBytes(), " =>> ", ok)
-				retP.Destroy()
+				fmt.Println(i, "::READ::", retP, " =>> ", ok)
+				rbuffer.Destory(retP)
 			}
 
 		}
@@ -46,8 +40,11 @@ func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 		buffer := bytes.NewBufferString(time_)
 		_bytes := buffer.Bytes()
 		bs := rbuffer.CreateBufferStruct()
-		bs.Check(len(_bytes))
-		copy(bs.GetBytes()[0:], _bytes[0:])
+		if len(_bytes) > len(bs) {
+			bs = _bytes
+		} else {
+			copy(bs[0:], _bytes[0:])
+		}
 		ok := rbuffer.WriteBuffer(bs)
 		if ok {
 			fmt.Println(i, "::WRITE::", bytes.NewBuffer(_bytes).String(), " =>> ", ok)
