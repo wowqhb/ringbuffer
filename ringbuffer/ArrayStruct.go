@@ -42,7 +42,7 @@ type ArrayPool struct {
 
 func NewArrayPool(size int64) (*ArrayPool, error) {
 	if int64(0) == size {
-		return nil, error.Error("ERROR:NewArrayPool falure")
+		return nil, error("ERROR:NewArrayPool falure")
 	}
 	ap := &ArrayPool{
 		pool:         list.New(),
@@ -92,7 +92,7 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 		}
 	}
 
-	return nil, error.Error("ERROR:getArrayStruct falure")
+	return nil, error("ERROR:getArrayStruct falure")
 }
 
 func (this *ArrayPool) Cleaner() {

@@ -24,7 +24,7 @@ func main() {
 	go writegoroutine(rbuffer)
 	go readgoroutine(rbuffer)
 
-	go rbuffer.clea
+	go rbuffer.Cleaner()
 	time.Sleep(60 * time.Second)
 
 }
