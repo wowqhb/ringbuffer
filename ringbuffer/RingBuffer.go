@@ -2,12 +2,33 @@ package ringbuffer
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 )
 
+type BufferStruct struct {
+	RealLen int
+	P       []byte
+	pool    sync.Pool
+}
+
+func (this *BufferStruct) GetBytes() []byte {
+	return this.P[0:this.RealLen]
+}
+
+func (this *BufferStruct) Check(len int) {
+	if len > len(this.P) {
+		this.P = make([]byte, len)
+	}
+}
+func (this *BufferStruct) Destroy() {
+	this.pool.Put(this)
+}
+
 type RingBuffer struct {
-	buf  chan []byte //环形buffer指针数组
-	done int64       //is done? 1=done; 0=doing
+	buf  chan *BufferStruct //环形buffer指针数组
+	done int64              //is done? 1=done; 0=doing
+	pool *sync.Pool
 }
 
 func powerOfTwo64(n int64) bool {
@@ -23,8 +44,17 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		return nil, fmt.Errorf("This size is not able to used")
 	}
 	buffer := RingBuffer{
-		buf:  make(chan []byte, size),
+		buf:  make(chan *BufferStruct, size),
 		done: int64(0),
+		pool: &sync.Pool{
+			New: func() interface{} {
+				return &BufferStruct{
+					RealLen: 0,
+					P:       make([]byte, 8192),
+					pool:    nil,
+				}
+			},
+		},
 	}
 	return &buffer, nil
 }
@@ -32,7 +62,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 /**
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
 */
-func (this *RingBuffer) ReadBuffer() ([]byte, bool) {
+func (this *RingBuffer) ReadBuffer() (*BufferStruct, bool) {
 	select {
 	case p, ok := <-this.buf:
 		return p, ok
@@ -43,7 +73,7 @@ func (this *RingBuffer) ReadBuffer() ([]byte, bool) {
 /**
 写入ringbuffer指针，以及将写序号加1
 */
-func (this *RingBuffer) WriteBuffer(in []byte) bool {
+func (this *RingBuffer) WriteBuffer(in *BufferStruct) bool {
 	select {
 	case this.buf <- in:
 		return true
@@ -53,6 +83,7 @@ func (this *RingBuffer) WriteBuffer(in []byte) bool {
 
 func (this *RingBuffer) Close() {
 	atomic.StoreInt64(&this.done, 1)
+	this.pool = nil
 	close(this.buf)
 }
 
@@ -62,4 +93,10 @@ func (this *RingBuffer) isDone() bool {
 	}
 
 	return false
+}
+
+func (this *RingBuffer) CreateBufferStruct() *BufferStruct {
+	bs := this.pool.Get().(*BufferStruct)
+	bs.pool = this.pool
+	return bs
 }
