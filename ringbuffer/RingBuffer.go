@@ -9,6 +9,7 @@ import (
 type BufferStruct struct {
 	realLen int
 	p       []byte
+	maxLen  int
 	pool    sync.Pool
 }
 
@@ -17,7 +18,8 @@ func (this *BufferStruct) GetBytes() []byte {
 }
 
 func (this *BufferStruct) Check(_len int) {
-	if _len > len(this.p) {
+	if _len > this.maxLen {
+		this.maxLen = _len
 		this.p = make([]byte, _len)
 	}
 }
@@ -50,6 +52,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 			New: func() interface{} {
 				return &BufferStruct{
 					realLen: 0,
+					maxLen:  8192,
 					p:       make([]byte, 8192),
 					pool:    nil,
 				}
