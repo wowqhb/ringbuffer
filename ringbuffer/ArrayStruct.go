@@ -79,7 +79,7 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 		if this.pool.Len() > 0 {
 			f := this.pool.Front()
 			this.pool.Remove(f)
-			v := ArrayStruct{}(f.Value)
+			v := ArrayStruct(f.Value)
 			v.flashTime()
 			return v, nil
 		}
@@ -107,7 +107,7 @@ func (this *ArrayPool) Cleaner() {
 	if this.pool.Len() > 0 {
 		for _, v := range this.pool {
 			if v != nil {
-				as := ArrayStruct{}(v)
+				as := ArrayStruct(v)
 				//时间差5分钟
 				if time.Now().Unix()-as.currentTime > int64(300000) {
 					_tmp.PushFront(v)
