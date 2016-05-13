@@ -3,6 +3,7 @@ package ringbuffer
 import (
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 type RingBuffer struct {
@@ -68,5 +69,7 @@ func (this *RingBuffer) isDone() bool {
 func (this *RingBuffer) Cleaner() {
 	for !this.isDone() {
 		this.pool.Cleaner()
+		fmt.Println("Cleaner running")
+		time.Sleep(10 * time.Minute)
 	}
 }
