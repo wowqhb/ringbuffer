@@ -3,13 +3,11 @@ package ringbuffer
 import (
 	"fmt"
 	"sync/atomic"
-	"time"
 )
 
 type RingBuffer struct {
-	buf  chan *ArrayStruct //环形buffer指针数组
-	done int64             //is done? 1=done; 0=doing
-	pool *ArrayPool
+	buf  chan []byte //环形buffer指针数组
+	done int64       //is done? 1=done; 0=doing
 }
 
 func powerOfTwo64(n int64) bool {
@@ -24,23 +22,17 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 	if !powerOfTwo64(size) {
 		return nil, fmt.Errorf("This size is not able to used")
 	}
-	_pool, err := NewArrayPool(size * 2)
-	if err != nil {
-		return nil, fmt.Errorf("Create ArrayPool falure")
-	}
 	buffer := RingBuffer{
-		buf:  make(chan *ArrayStruct, size),
+		buf:  make(chan []byte, size),
 		done: int64(0),
-		pool: _pool,
 	}
-
 	return &buffer, nil
 }
 
 /**
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
 */
-func (this *RingBuffer) ReadBuffer() (*ArrayStruct, bool) {
+func (this *RingBuffer) ReadBuffer() ([]byte, bool) {
 	select {
 	case p, ok := <-this.buf:
 		return p, ok
@@ -52,21 +44,8 @@ func (this *RingBuffer) ReadBuffer() (*ArrayStruct, bool) {
 写入ringbuffer指针，以及将写序号加1
 */
 func (this *RingBuffer) WriteBuffer(in []byte) bool {
-	as, err := this.pool.getArrayStruct()
-	if err != nil {
-		return false
-	}
-	_len := int64(len(in))
-	if _len > as.maxLen {
-		as.maxLen = _len
-		as.p = in
-		as.realLen = _len
-	} else {
-		as.realLen = _len
-		copy(as.p[0:], in[0:])
-	}
 	select {
-	case this.buf <- as:
+	case this.buf <- in:
 		return true
 	}
 	return false
@@ -83,12 +62,4 @@ func (this *RingBuffer) isDone() bool {
 	}
 
 	return false
-}
-
-func (this *RingBuffer) Cleaner() {
-	for !this.isDone() && this.pool != nil {
-		this.pool.Cleaner()
-		fmt.Println("Cleaner running")
-		time.Sleep(10 * time.Minute)
-	}
 }
