@@ -10,7 +10,7 @@ type BufferStruct struct {
 	realLen int
 	p       []byte
 	maxLen  int
-	pool    sync.Pool
+	pool    *sync.Pool
 }
 
 func (this *BufferStruct) GetBytes() []byte {
