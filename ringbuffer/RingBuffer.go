@@ -2,7 +2,6 @@ package ringbuffer
 
 import (
 	"fmt"
-	"go/build"
 	"sync"
 	"sync/atomic"
 )
