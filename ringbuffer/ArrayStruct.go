@@ -79,8 +79,8 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 		if this.pool.Len() > 0 {
 			f := this.pool.Front()
 			this.pool.Remove(f)
-			ArrayStruct{}(f.Value).flashTime()
-			return f.Value, nil
+			*ArrayStruct{}(f.Value).flashTime()
+			return &(f.Value), nil
 		}
 		//不存在，则创建
 		if this.GetCurrentTotal() == 0 {
