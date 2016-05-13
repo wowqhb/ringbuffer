@@ -6,8 +6,9 @@ import (
 )
 
 type RingBuffer struct {
-	buf  chan ArrayStruct //环形buffer指针数组
-	done int64            //is done? 1=done; 0=doing
+	buf  chan *ArrayStruct //环形buffer指针数组
+	done int64             //is done? 1=done; 0=doing
+	pool *ArrayPool
 }
 
 func powerOfTwo64(n int64) bool {
@@ -23,7 +24,7 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 		return nil, fmt.Errorf("This size is not able to used")
 	}
 	buffer := RingBuffer{
-		buf:  make(chan ArrayStruct, size),
+		buf:  make(chan *ArrayStruct, size),
 		done: int64(0),
 	}
 	return &buffer, nil
@@ -62,4 +63,10 @@ func (this *RingBuffer) isDone() bool {
 	}
 
 	return false
+}
+
+func (this *RingBuffer) Cleaner() {
+	for !this.isDone() {
+		this.pool.Cleaner()
+	}
 }

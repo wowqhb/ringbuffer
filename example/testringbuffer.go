@@ -23,6 +23,8 @@ func main() {
 	fmt.Println(retP)*/
 	go writegoroutine(rbuffer)
 	go readgoroutine(rbuffer)
+
+	go rbuffer.Cleaner()
 	time.Sleep(60 * time.Second)
 
 }

@@ -94,3 +94,28 @@ func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 
 	return nil, error.Error("ERROR:getArrayStruct falure")
 }
+
+func (this *ArrayPool) Cleaner() {
+	if this == nil {
+		return
+	}
+	this.lock.L.Lock()
+	defer this.lock.L.Unlock()
+	_tmp := list.New()
+	if this.pool.Len() > 0 {
+		for _, v := range this.pool {
+			if v != nil {
+				as := ArrayStruct{}(v)
+				//时间差5分钟
+				if time.Now().Unix()-as.currentTime > int64(300000) {
+					_tmp.PushFront(v)
+				}
+			}
+		}
+		for i := 0; i < _tmp.Len(); i++ {
+			v := _tmp.Front()
+			this.pool.Remove(v)
+			_tmp.Remove(v)
+		}
+	}
+}
