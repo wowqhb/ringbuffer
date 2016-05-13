@@ -103,8 +103,9 @@ func (this *ArrayPool) Cleaner() {
 	}
 	this.lock.L.Lock()
 	defer this.lock.L.Unlock()
-	if this.pool.Len() > 0 {
-		for i := 0; i < this.pool.Len(); i++ {
+	_len := this.pool.Len()
+	if _len > 0 {
+		for i := 0; i < _len; i++ {
 			v := this.pool.Front()
 			if v != nil {
 				as := v.Value.(*ArrayStruct)
