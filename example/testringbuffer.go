@@ -25,7 +25,6 @@ func main() {
 	go writegoroutine(rbuffer)
 	go readgoroutine(rbuffer)
 
-	go rbuffer.Cleaner()
 	time.Sleep(60 * time.Second)
 
 }
@@ -37,7 +36,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 		if ok {
 			if retP != nil {
 				i++
-				_i, err := strconv.Atoi(bytes.NewBuffer(retP.GetBytes()).String())
+				_i, err := strconv.Atoi(bytes.NewBuffer(retP).String())
 				if err != nil {
 					ok = false
 				} else {
