@@ -72,8 +72,11 @@ func (this *RingBuffer) isDone() bool {
 	return false
 }
 
-func (this *RingBuffer) GetBytes() []byte {
+func (this *RingBuffer) GetBytes(_len int) []byte {
 	bs := this.pool.Get().([]byte)
+	if _len > len(bs) {
+		bs = make([]byte, _len)
+	}
 	return bs
 }
 
