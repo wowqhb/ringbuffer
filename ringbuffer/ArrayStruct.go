@@ -71,6 +71,14 @@ func (this *ArrayPool) addCurrentTotal() bool {
 	return true
 }
 
+func (this *ArrayPool) subtractCurrentTotal() bool {
+	if this.GetCurrentTotal() <= 0 {
+		return false
+	}
+	atomic.AddInt64(&this.currentTotal, int64(-1))
+	return true
+}
+
 func (this *ArrayPool) getArrayStruct() (*ArrayStruct, error) {
 	this.lock.L.Lock()
 	defer this.lock.L.Unlock()
@@ -112,6 +120,7 @@ func (this *ArrayPool) Cleaner() {
 				//时间差5分钟
 				if time.Now().Unix()-as.currentTime > int64(300000) {
 					this.pool.Remove(v)
+					this.subtractCurrentTotal()
 				} else {
 					this.pool.MoveToBack(v)
 				}
