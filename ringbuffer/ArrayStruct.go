@@ -112,7 +112,7 @@ func (this *ArrayPool) Cleaner() {
 				if time.Now().Unix()-as.currentTime > int64(300000) {
 					this.pool.Remove(v)
 				} else {
-					this.pool.MoveToBack()
+					this.pool.MoveToBack(v)
 				}
 			}
 		}
