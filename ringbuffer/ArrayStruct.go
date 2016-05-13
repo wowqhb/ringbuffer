@@ -26,6 +26,10 @@ func newArrayStruct(ap *ArrayPool) (*ArrayStruct, error) {
 	}, nil
 }
 
+func (this *ArrayStruct) GetBytes() []byte {
+	return this.p[0:this.realLen]
+}
+
 func (this *ArrayStruct) flashTime() {
 	this.currentTime = time.Now().Unix()
 }

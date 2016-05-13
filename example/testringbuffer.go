@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/wowqhb/ringbuffer/ringbuffer"
+	"strconv"
 	"time"
 )
 
@@ -37,6 +38,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 			if retP != nil {
 				i++
 				fmt.Println(i, "::READ::", retP, " =>> ", ok)
+				retP.ReBackToPool()
 			}
 
 		}
@@ -46,12 +48,13 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
 	i := int64(0)
 	for {
-		time_ := time.Now().String()
-		bytes := bytes.NewBufferString(time_).Bytes()
-		ok := rbuffer.WriteBuffer(bytes)
+		time_ := strconv.Itoa(i)
+		buffer := bytes.NewBufferString(time_)
+		_bytes := buffer.Bytes()
+		ok := rbuffer.WriteBuffer(_bytes)
 		if ok {
 			i++
-			fmt.Println(i, "::WRITE::", bytes, " =>> ", ok)
+			fmt.Println(i, "::WRITE::", bytes.NewBuffer(_bytes).String(), " =>> ", ok)
 		}
 	}
 }
