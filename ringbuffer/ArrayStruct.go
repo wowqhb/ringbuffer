@@ -103,21 +103,18 @@ func (this *ArrayPool) Cleaner() {
 	}
 	this.lock.L.Lock()
 	defer this.lock.L.Unlock()
-	_tmp := list.New()
 	if this.pool.Len() > 0 {
-		for _, v := range this.pool {
+		for i := 0; i < this.pool.Len(); i++ {
+			v := this.pool.Front()
 			if v != nil {
-				as := v.(*ArrayStruct)
+				as := v.Value.(*ArrayStruct)
 				//时间差5分钟
 				if time.Now().Unix()-as.currentTime > int64(300000) {
-					_tmp.PushFront(v)
+					this.pool.Remove(v)
+				} else {
+					this.pool.MoveToBack()
 				}
 			}
-		}
-		for i := 0; i < _tmp.Len(); i++ {
-			v := _tmp.Front()
-			this.pool.Remove(v)
-			_tmp.Remove(v)
 		}
 	}
 }
