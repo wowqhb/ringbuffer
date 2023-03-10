@@ -12,33 +12,33 @@ import (
 )
 
 func main() {
-	rbuffer, err := ringbuffer.NewRingBuffer[[]byte](int64(32))
+	rBuffer, err := ringbuffer.NewRingBuffer[[]byte](int64(32))
 	fmt.Println(" ringbuffer.NewRingBuffer(int64(32)):", err)
-	fmt.Println(rbuffer.GetCurrentReadIndex())
-	fmt.Println(rbuffer.GetCurrentWriteIndex())
-	/*bytes := make([]byte, 20)
+	fmt.Println(rBuffer.GetCurrentReadIndex())
+	fmt.Println(rBuffer.GetCurrentWriteIndex())
+	bytes := make([]byte, 20)
 	bytes[1] = byte(20)
 	fmt.Println(&bytes)
-	ok := rbuffer.WriteBuffer(&bytes)
+	ok := rBuffer.WriteBuffer(&bytes)
 	fmt.Println(ok)
-	retP, ok := rbuffer.ReadBuffer()
+	retP, ok := rBuffer.ReadBuffer()
 	fmt.Println(ok)
 	fmt.Println(retP)
 	bytes[0] = byte(19)
 	fmt.Println(bytes)
-	fmt.Println(retP)*/
-	go writegoroutine(rbuffer)
-	go readgoroutine(rbuffer)
+	fmt.Println(retP)
+	go writeGoroutine(rBuffer)
+	go readGoroutine(rBuffer)
 	time.Sleep(60 * time.Second)
 
 }
 
-func readgoroutine(rbuffer *ringbuffer.RingBuffer[[]byte]) {
+func readGoroutine(rBuffer *ringbuffer.RingBuffer[[]byte]) {
 	for {
-		retP, ok := rbuffer.ReadBuffer()
+		retP, ok := rBuffer.ReadBuffer()
 		if ok {
 			if retP != nil {
-				fmt.Println(rbuffer.GetCurrentReadIndex()-1, "::READ::", *retP, " =>> ", ok)
+				fmt.Println(rBuffer.GetCurrentReadIndex()-1, "::READ::", *retP, " =>> ", ok)
 			}
 
 		}
@@ -46,12 +46,12 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer[[]byte]) {
 	}
 }
 
-func writegoroutine(rbuffer *ringbuffer.RingBuffer[[]byte]) {
+func writeGoroutine(rBuffer *ringbuffer.RingBuffer[[]byte]) {
 	for {
-		time_ := strconv.FormatInt(rbuffer.GetCurrentWriteIndex()+int64(10000), 10)
+		time_ := strconv.FormatInt(rBuffer.GetCurrentWriteIndex()+int64(10000), 10)
 		bytes := bytes.NewBufferString(time_).Bytes()
-		ok := rbuffer.WriteBuffer(&bytes)
-		windex := rbuffer.GetCurrentWriteIndex()
+		ok := rBuffer.WriteBuffer(&bytes)
+		windex := rBuffer.GetCurrentWriteIndex()
 		if ok {
 			fmt.Println(windex, "::WRITE::", bytes, " =>> ", ok)
 		}
