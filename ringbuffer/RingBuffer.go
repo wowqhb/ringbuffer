@@ -1,19 +1,19 @@
 package ringbuffer
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 	"sync/atomic"
 )
 
-type RingBuffer struct {
+type RingBuffer[T any] struct {
 	readIndex  int64      //读序号
 	writeIndex int64      //写序号
-	buf        []*[]byte  //环形buffer指针数组
+	buf        []*T       //环形buffer指针数组
 	bufSize    int64      //初始化环形buffer指针数组大小
 	mask       int64      //初始化环形buffer指针数组大小
-	pcond      *sync.Cond //生产者
-	ccond      *sync.Cond //消费者
+	pCond      *sync.Cond //生产者
+	cCond      *sync.Cond //消费者
 	done       int64      //is done? 1=done; 0=doing
 }
 
@@ -21,22 +21,23 @@ func powerOfTwo64(n int64) bool {
 	return n != 0 && (n&(n-1)) == 0
 }
 
-/**
+/*
+*
 初始化ringbuffer
 参数bufferSize：初始化环形buffer指针数组大小
 */
-func NewRingBuffer(size int64) (*RingBuffer, error) {
+func NewRingBuffer[T any](size int64) (*RingBuffer[T], error) {
 	if !powerOfTwo64(size) {
-		return nil, fmt.Errorf("This size is not able to used")
+		return nil, errors.New("Size必须为2的幂次方")
 	}
-	buffer := RingBuffer{
+	buffer := RingBuffer[T]{
 		readIndex:  int64(0),
 		writeIndex: int64(0),
-		buf:        make([]*[]byte, size),
+		buf:        make([]*T, size),
 		bufSize:    size,
 		mask:       size - int64(1),
-		pcond:      sync.NewCond(new(sync.Mutex)),
-		ccond:      sync.NewCond(new(sync.Mutex)),
+		pCond:      sync.NewCond(new(sync.Mutex)),
+		cCond:      sync.NewCond(new(sync.Mutex)),
 		done:       int64(0),
 	}
 	for i := int64(0); i < size; i++ {
@@ -45,41 +46,43 @@ func NewRingBuffer(size int64) (*RingBuffer, error) {
 	return &buffer, nil
 }
 
-/**
+/*
+*
 获取当前读序号
 */
-func (this *RingBuffer) GetCurrentReadIndex() int64 {
+func (this *RingBuffer[T]) GetCurrentReadIndex() int64 {
 	return atomic.LoadInt64(&this.readIndex)
 }
 
-/**
+/*
+*
 获取当前写序号
 */
-func (this *RingBuffer) GetCurrentWriteIndex() int64 {
+func (this *RingBuffer[T]) GetCurrentWriteIndex() int64 {
 	return atomic.LoadInt64(&this.writeIndex)
 }
 
-/**
+/*
+*
 读取ringbuffer指定的buffer指针，返回该指针并清空ringbuffer该位置存在的指针内容，以及将读序号加1
 */
-func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
-	this.ccond.L.Lock()
+func (this *RingBuffer[T]) ReadBuffer() (p *T, ok bool) {
+	this.cCond.L.Lock()
 	defer func() {
-		this.pcond.Signal()
-		this.ccond.L.Unlock()
+		this.cCond.Signal()
+		this.cCond.L.Unlock()
 	}()
 	ok = false
 	p = nil
 	readIndex := this.GetCurrentReadIndex()
-	writeIndex := this.GetCurrentWriteIndex()
 	for {
 		if this.isDone() {
 			return nil, false
 		}
-		writeIndex = this.GetCurrentWriteIndex()
+		writeIndex := this.GetCurrentWriteIndex()
 		if readIndex >= writeIndex {
-			this.pcond.Signal()
-			this.ccond.Wait()
+			this.cCond.Signal()
+			this.cCond.Wait()
 		} else {
 			break
 		}
@@ -94,26 +97,26 @@ func (this *RingBuffer) ReadBuffer() (p *[]byte, ok bool) {
 	return p, ok
 }
 
-/**
+/*
+*
 写入ringbuffer指针，以及将写序号加1
 */
-func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
-	this.pcond.L.Lock()
+func (this *RingBuffer[T]) WriteBuffer(in *T) (ok bool) {
+	this.cCond.L.Lock()
 	defer func() {
-		this.ccond.Signal()
-		this.pcond.L.Unlock()
+		this.cCond.Signal()
+		this.cCond.L.Unlock()
 	}()
 	ok = false
-	readIndex := this.GetCurrentReadIndex()
 	writeIndex := this.GetCurrentWriteIndex()
 	for {
 		if this.isDone() {
 			return false
 		}
-		readIndex = this.GetCurrentReadIndex()
+		readIndex := this.GetCurrentReadIndex()
 		if writeIndex >= readIndex && writeIndex-readIndex >= this.bufSize {
-			this.ccond.Signal()
-			this.pcond.Wait()
+			this.cCond.Signal()
+			this.cCond.Wait()
 		} else {
 			break
 		}
@@ -125,24 +128,20 @@ func (this *RingBuffer) WriteBuffer(in *[]byte) (ok bool) {
 	return ok
 }
 
-func (this *RingBuffer) Close() error {
+func (this *RingBuffer[T]) Close() error {
 	atomic.StoreInt64(&this.done, 1)
 
-	this.pcond.L.Lock()
-	this.ccond.Signal()
-	this.pcond.L.Unlock()
+	this.cCond.L.Lock()
+	this.cCond.Signal()
+	this.cCond.L.Unlock()
 
-	this.ccond.L.Lock()
-	this.pcond.Signal()
-	this.ccond.L.Unlock()
+	this.cCond.L.Lock()
+	this.cCond.Signal()
+	this.cCond.L.Unlock()
 
 	return nil
 }
 
-func (this *RingBuffer) isDone() bool {
-	if atomic.LoadInt64(&this.done) == 1 {
-		return true
-	}
-
-	return false
+func (this *RingBuffer[T]) isDone() bool {
+	return atomic.LoadInt64(&this.done) == 1
 }

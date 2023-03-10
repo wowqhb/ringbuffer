@@ -3,14 +3,16 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/wowqhb/ringbuffer/ringbuffer"
 	"time"
+
+	"github.com/wowqhb/ringbuffer/ringbuffer"
+
 	//"strconv"
 	"strconv"
 )
 
 func main() {
-	rbuffer, err := ringbuffer.NewRingBuffer(int64(32))
+	rbuffer, err := ringbuffer.NewRingBuffer[[]byte](int64(32))
 	fmt.Println(" ringbuffer.NewRingBuffer(int64(32)):", err)
 	fmt.Println(rbuffer.GetCurrentReadIndex())
 	fmt.Println(rbuffer.GetCurrentWriteIndex())
@@ -31,7 +33,7 @@ func main() {
 
 }
 
-func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
+func readgoroutine(rbuffer *ringbuffer.RingBuffer[[]byte]) {
 	for {
 		retP, ok := rbuffer.ReadBuffer()
 		if ok {
@@ -44,7 +46,7 @@ func readgoroutine(rbuffer *ringbuffer.RingBuffer) {
 	}
 }
 
-func writegoroutine(rbuffer *ringbuffer.RingBuffer) {
+func writegoroutine(rbuffer *ringbuffer.RingBuffer[[]byte]) {
 	for {
 		time_ := strconv.FormatInt(rbuffer.GetCurrentWriteIndex()+int64(10000), 10)
 		bytes := bytes.NewBufferString(time_).Bytes()
