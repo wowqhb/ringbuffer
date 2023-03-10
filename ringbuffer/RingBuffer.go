@@ -28,7 +28,7 @@ func powerOfTwo64(n int64) bool {
 */
 func NewRingBuffer(size int64) (*RingBuffer, error) {
 	if !powerOfTwo64(size) {
-		return nil, fmt.Errorf("This size is not able to used")
+		return nil, fmt.Errorf("Size必须为2的幂次方")
 	}
 	buffer := RingBuffer{
 		readIndex:  int64(0),
